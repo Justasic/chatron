@@ -32,13 +32,16 @@ int main (int argc, char *argv[])
 	try
 	{
 		//Make the socket used to connect to the server
-		Socket sock(server,port);
+		Socket sock(server, port);
+		std::cout << "Hello! Connecting to server~" << std::endl;
 		//Incase there is no connection, say so
-		if ( !sock.get_address() )
-			throw SocketException ( "Could not find irc server." );
+		if (!sock.get_address())
+			throw SocketException("Could not find irc server.");
 		
-		if ( !sock.connect() )
-			throw SocketException ( "Could not connect to irc server." );
+		if (!sock.connect())
+			throw SocketException("Could not connect to irc server.");
+		
+		std::cout << "Socket connected! Initiating IRC negotiation..." << std::endl;
 		
 		/*Create the variable std::string 'reply'
 		'Reply' means 'What the server is saying back'
@@ -50,9 +53,10 @@ int main (int argc, char *argv[])
 		//Accept some server replies after connecting
 		sock >> reply;
 		sock >> reply;
+		std::cout << "Sending USER and NICK commands..." << std::endl;
 		//Set the username and nick
-		sock << "USER "+usrname+" d d "+usrname+"\r\n";
-		sock << "NICK "+nick+"\r\n";
+		sock << "USER "+usrname+" d d "+usrname+"\n";
+		sock << "NICK "+nick+"\n";
 		sock >> reply;
 
 		//Reply to the ping from the server
@@ -66,9 +70,10 @@ int main (int argc, char *argv[])
 		//You will see why im making a bool variable here later  
 		bool in_channel = false;
 		
+		std::cout << "Joining channel..." << std::endl;
 		//Join the 
-		sock << "JOIN " + channel + "\r\n";
-		sock << "PRIVMSG " + channel + " " + welcome_msg + "\r\n";
+		sock << "JOIN " + channel + "\n";
+		sock << "PRIVMSG " + channel + " " + welcome_msg + "\n";
 
 		//infi loop to stay connected
 		while (true)
@@ -88,10 +93,10 @@ int main (int argc, char *argv[])
 			This is so you can make things happen only if you know you are in 
 			a channel.
 			*/
-			int i = reply.find(channel_greeting);
+			int i = reply.find("353");
 			if(i != std::string::npos)
 			{
-				std::cout << "Channel join confirmation... CHECK";
+				std::cout << "Channel join confirmation... CHECK\n";
 				in_channel = true;
 			}
 			
@@ -99,7 +104,7 @@ int main (int argc, char *argv[])
 			int b = reply.find(nick);
 			if (b != std::string::npos && in_channel)
 			{
-				sock << "PRIVMSG " + channel + " Someone said my name!" + "\r\n";
+				sock << "PRIVMSG " + channel + " Someone said my name!" + "\n";
 			}
 			
 			/*If it looks for !time in a server reply (aka if anyone in the channel
@@ -108,13 +113,13 @@ int main (int argc, char *argv[])
 			int t = reply.find("!time");
 			if (t != std::string::npos && in_channel)
 			{
-				sock << "PRIVMSG " + channel + " " + tell_time() + "\r\n";
+				sock << "PRIVMSG " + channel + " " + tell_time() + "\n";
 			}
 		}
 	}
 	catch (SocketException& e)
 	{
-		std::cout << "Exception was caught:" << e.description() << "\n";
+		std::cout << "Exception was caught: " << e.description() << "\n";
 	}
 	
 	// Return success

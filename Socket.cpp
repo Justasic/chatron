@@ -1,6 +1,7 @@
 /* Socket.cpp */
 
 #include "Socket.h"
+#include "SocketException.h"
 #include "string.h"
 #include <string.h>
 #include <errno.h>
@@ -9,15 +10,15 @@
 
 Socket::Socket(const std::string s, const std::string p) : m_sock(-1), server(s), port(p)
 {
-	memset ( &hints, 0, sizeof ( hints ) );
+	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 }
 
 Socket::~Socket()
 {
-	if ( is_valid() )
-		::close ( m_sock );
+	if (is_valid())
+		::close(m_sock);
 }
 
 
@@ -72,17 +73,34 @@ bool Socket::connect ()
 
 const Socket& Socket::operator >> (std::string& s) const
 {
-	char buf [ MAXRECV + 1 ];
+	char buf[MAXRECV + 1];
 	s = "";
-	memset ( buf, 0, MAXRECV + 1 );
-	::recv ( m_sock, buf, MAXRECV, 0 );
+	memset(buf, 0, MAXRECV + 1);
+	errno = 0;
+	if (recv(m_sock, buf, MAXRECV, 0) == -1)
+	{
+		// Ignore EAGAIN or successful receives (when we receive no data)
+		if (errno != 0)
+			if (errno != EAGAIN)
+			{
+				throw SocketException(strerror(errno));
+			}
+	}
 	s = buf;
-	std::cout << ">> " + s << "\n";
+	std::cout << ">> " << s << "\n";
 	return *this;
 }
 
 const Socket& Socket::operator << (const std::string& s) const
 {
-	::send ( m_sock, s.c_str(), s.size(), 0 );
-	std::cout << "<< " + s << "\n";
+	errno = 0;
+	if (send(m_sock, s.c_str(), s.size(), 0))
+	{
+		if (errno != 0)
+			if (errno != EAGAIN)
+			{
+				throw SocketException(strerror(errno));
+			}
+	}
+	std::cout << "<< " << s << std::endl;
 }
