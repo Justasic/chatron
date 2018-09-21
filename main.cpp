@@ -10,7 +10,7 @@
 If you wanna edit the server, channel, nick, etc that the bot
 connects to, do so here, NOT in the main code.
 */
-const std::string server = "irc.vemnet.us";
+const std::string server = "irc.stacksmash.net";
 const std::string port = "6667";
 const std::string channel = "#Computers";
 const std::string nick = "Catron";

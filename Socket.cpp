@@ -103,4 +103,5 @@ const Socket& Socket::operator << (const std::string& s) const
 			}
 	}
 	std::cout << "<< " << s << std::endl;
+	return *this;
 }
